@@ -1,0 +1,17 @@
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+databases>=0.9.0
+sqlalchemy>=2.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+
+# 資料庫驅動（擇一取消註解）
+aiosqlite>=0.20.0          # SQLite（本地開發）
+# aiomysql>=0.2.0          # MySQL
+# asyncpg>=0.29.0          # PostgreSQL
+
+# 測試
+pytest>=8.0.0
+httpx>=0.27.0
+pytest-asyncio>=0.23.0
