@@ -17,19 +17,34 @@ uvicorn src.main:app --reload --port 8000
 
 ```
 project/
-├── src/
-│   ├── main.py          程式入口
-│   ├── config.py        環境變數設定
-│   ├── database.py      DB 連線
-│   ├── models/          資料表定義
-│   ├── schemas/         Pydantic 驗證
-│   ├── routes/          API 路由（只負責接收/回傳）
-│   ├── services/        商業邏輯
-│   └── utils/           共用工具
-├── tests/               自動化測試
-├── scripts/             一次性工具（seed、匯入資料）
-├── docs/                API 文件
-└── data/                測試 JSON/CSV
+├── .git/                  Git 版本控制
+├── .gitignore            忽略不必要的檔案
+├── .env.example          環境變數範例設定
+├── .pytest_cache/        pytest 快取資料
+├── recipe_app.db         本機 SQLite 測試資料庫
+├── requirements.txt      Python 套件依賴
+├── data/                 測試資料（CSV / JSON）
+├── docs/                 API 文件與專案說明
+├── scripts/              一次性工具與資料初始化腳本
+│   └── seed.py           建立測試資料
+├── src/                  應用程式原始碼
+│   ├── __init__.py
+│   ├── main.py           程式入口
+│   ├── config.py         環境與設定讀取
+│   ├── database.py       資料庫連線設定
+│   ├── models/           ORM 資料表定義
+│   │   └── tables.py
+│   ├── schemas/          Pydantic 請求/回應驗證
+│   ├── routes/           API 路由
+│   ├── services/         商業邏輯與資料處理
+│   └── utils/            共用輔助工具
+└── tests/                自動化測試
+    ├── conftest.py
+    ├── test_favorites.py
+    ├── test_fridge.py
+    ├── test_ingredients.py
+    ├── test_recipes.py
+    └── test_integration.py
 ```
 
 ## 執行測試
