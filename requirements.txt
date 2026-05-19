@@ -7,8 +7,8 @@ pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 
 # 資料庫驅動（擇一取消註解）
-aiosqlite>=0.20.0          # SQLite（本地開發）
-# aiomysql>=0.2.0          # MySQL
+# aiosqlite>=0.20.0          # SQLite（本地開發）
+aiomysql>=0.2.0          # MySQL
 # asyncpg>=0.29.0          # PostgreSQL
 
 # 測試
