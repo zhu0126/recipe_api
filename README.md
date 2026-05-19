@@ -11,7 +11,7 @@ python scripts/seed.py      # 建立測試資料（選用）
 uvicorn src.main:app --reload --port 8000
 ```
 
-互動文件：http://localhost:8000/docs
+互動文件：https://recipeapi-production-125f.up.railway.app/docs
 
 ## 目錄結構
 
