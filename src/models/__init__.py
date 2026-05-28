@@ -3,8 +3,10 @@ from src.models.tables import (
     ingredients,
     recipes,
     recipe_ingredients,
-    fridge_items,
-    favorites,
+    recipe_label,
+    recipe_cook_methods,
+    user_ingredients,
+    user_recipes,
 )
 
 __all__ = [
@@ -12,6 +14,8 @@ __all__ = [
     "ingredients",
     "recipes",
     "recipe_ingredients",
-    "fridge_items",
-    "favorites",
+    "recipe_label",
+    "recipe_cook_methods",
+    "user_ingredients",
+    "user_recipes",
 ]
