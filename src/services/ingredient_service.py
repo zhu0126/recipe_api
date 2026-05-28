@@ -20,7 +20,8 @@ async def search_ingredients(db, q: str, limit: int) -> dict:
     )
     return {"keyword": q, "results": [dict(r) for r in rows]}
 
-
+"""
+手動新增食材
 async def create_ingredient(db, name: str, category, unit) -> dict:
     existing = await db.fetch_one(ingredients.select().where(ingredients.c.name == name))
     if existing:
@@ -29,3 +30,4 @@ async def create_ingredient(db, name: str, category, unit) -> dict:
         ingredients.insert().values(name=name, category=category, unit=unit or "份")
     )
     return {"message": "食材新增成功", "id": ing_id, "name": name}
+"""
