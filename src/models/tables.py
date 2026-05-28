@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import (
-    MetaData, Table, Column, Integer, String, Float,
+    MetaData, Table, Column, Integer, String, Float,Boolean,
     Text, DateTime, Date, ForeignKey, SmallInteger, UniqueConstraint, CHAR
 )
 from datetime import datetime
@@ -24,7 +24,7 @@ recipes = Table(
     Column("servings", Integer),
     Column("image_url", String(500)),
     Column("source_url", String(500)),
-    Column("is_vegetarian", bool),
+    Column("is_vegetarian", Boolean),
 )
 
 recipe_ingredients = Table(
@@ -73,6 +73,7 @@ users = Table(
 )
 
 user_category_preferences = Table(
+    "user_category_preferences", metadata,
     Column("user_id", CHAR(3), ForeignKey("users.user_id"), primary_key=True),
     Column("category_preference", String(50), primary_key=True),
 )

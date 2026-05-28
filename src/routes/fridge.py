@@ -15,7 +15,8 @@ async def get_fridge():
 @router.post("/", summary="新增食材到冰箱", status_code=201)
 async def add_to_fridge(item: FridgeItemIn):
     return await fridge_service.add_item(
-        database, item.ingredient_name, item.quantity, item.unit, item.expired_at
+        database, item.ingredient_name, item.amount,
+        item.unit, item.expiration_date, item.storage_location
     )
 
 
@@ -24,22 +25,23 @@ async def batch_add(batch: FridgeBatchIn):
     return await fridge_service.batch_add(database, batch.items)
 
 
-@router.put("/{item_id}", summary="修改冰箱食材數量")
-async def update_item(item_id: int, update: FridgeItemUpdate):
+@router.put("/{ingredient_id}", summary="修改冰箱食材數量")
+async def update_item(ingredient_id: str, update: FridgeItemUpdate):
     result = await fridge_service.update_item(
-        database, item_id, update.quantity, update.unit, update.expired_at
+        database, ingredient_id, update.amount,
+        update.unit, update.expiration_date, update.storage_location
     )
     if not result:
         raise HTTPException(status_code=404, detail="冰箱中找不到此食材")
     return result
 
 
-@router.delete("/{item_id}", summary="從冰箱移除食材")
-async def remove_item(item_id: int):
-    success = await fridge_service.remove_item(database, item_id)
+@router.delete("/{ingredient_id}", summary="從冰箱移除食材")
+async def remove_item(ingredient_id: str):
+    success = await fridge_service.remove_item(database, ingredient_id)
     if not success:
         raise HTTPException(status_code=404, detail="冰箱中找不到此食材")
-    return {"message": "已移除食材", "id": item_id}
+    return {"message": "已移除食材", "ingredient_id": ingredient_id}
 
 
 @router.delete("/", summary="一鍵清空冰箱")
