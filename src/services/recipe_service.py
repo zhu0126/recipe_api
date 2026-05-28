@@ -3,8 +3,9 @@ import sqlalchemy as sa
 from typing import Optional
 from collections import Counter
 
-from src.models import recipes, recipe_ingredients, ingredients, favorites
+from src.models import recipes, recipe_ingredients, ingredients, user_recipes, recipe_label, recipe_cook_methods
 
+USER_ID = "001" 
 
 async def get_home_recipes(db, limit: int) -> dict:
     popular = await db.fetch_all(
@@ -35,8 +36,10 @@ async def search_recipes(db, q: str, page: int, page_size: int) -> dict:
 
 
 async def get_recipes_by_ingredients(db, names: list, match_all: bool) -> dict:
-    ing_rows = await db.fetch_all(ingredients.select().where(ingredients.c.name.in_(names)))
-    ing_ids = [r["id"] for r in ing_rows]
+    ing_rows = await db.fetch_all(
+        ingredients.select().where(ingredients.c.name.in_(names))
+    )
+    ing_ids = [r["ingredient_id"] for r in ing_rows]
     if not ing_ids:
         return {"recipes": [], "message": "找不到對應食材"}
 
@@ -53,10 +56,10 @@ async def get_recipes_by_ingredients(db, names: list, match_all: bool) -> dict:
         return {"recipes": [], "message": "沒有符合條件的食譜"}
 
     rows = await db.fetch_all(
-        recipes.select().where(recipes.c.id.in_(matched_ids)).order_by(recipes.c.like_count.desc())
+        recipes.select().where(recipes.c.recipe_id.in_(matched_ids))
     )
     results = sorted(
-        [dict(r) | {"match_count": id_counts[r["id"]]} for r in rows],
+        [dict(r) | {"match_count": id_counts[r["recipe_id"]]} for r in rows],
         key=lambda x: x["match_count"],
         reverse=True,
     )
@@ -79,8 +82,8 @@ async def advanced_filter(db, keyword, cuisine, difficulty, max_time, tags, sort
         for tag in tags.split(","):
             stmt = stmt.where(recipes.c.tags.ilike(f"%{tag.strip()}%"))
 
-    allowed_sort = {"created_at", "like_count", "view_count", "cooking_time"}
-    sort_col = getattr(recipes.c, sort_by) if sort_by in allowed_sort else recipes.c.created_at
+    allowed_sort = {"cook_time", "servings", "title"}
+    sort_col = getattr(recipes.c, sort_by) if sort_by in allowed_sort else recipes.c.recipe_id
     stmt = stmt.order_by(sort_col.asc() if order == "asc" else sort_col.desc())
     stmt = stmt.offset(offset).limit(page_size)
 
@@ -89,13 +92,13 @@ async def advanced_filter(db, keyword, cuisine, difficulty, max_time, tags, sort
 
 
 async def get_recipe_detail(db, recipe_id: int) -> dict:
-    row = await db.fetch_one(recipes.select().where(recipes.c.id == recipe_id))
+    row = await db.fetch_one(recipes.select().where(recipes.c.recipe_id == recipe_id))
     if not row:
         return None
 
-    await db.execute(
-        recipes.update().where(recipes.c.id == recipe_id).values(view_count=row["view_count"] + 1)
-    )
+    # await db.execute(
+    #     recipes.update().where(recipes.c.id == recipe_id).values(view_count=row["view_count"] + 1)
+    # )
 
     ing_query = (
         recipe_ingredients.join(ingredients, recipe_ingredients.c.ingredient_id == ingredients.c.id)
@@ -104,24 +107,35 @@ async def get_recipe_detail(db, recipe_id: int) -> dict:
     )
     ing_rows = await db.fetch_all(ing_query)
     ing_list = [
-        {"ingredient_id": r["ingredient_id"], "name": r["name"],
-         "quantity": r["quantity"], "unit": r["unit"], "note": r["note"]}
+        {
+            "ingredient_id": r["ingredient_id"],
+            "name": r["name"],
+            "amount": r["amount"],
+            "unit": r["unit"],
+        }
         for r in ing_rows
     ]
 
+    # 標籤
+    label_rows = await db.fetch_all(
+        recipe_label.select().where(recipe_label.c.recipe_id == recipe_id)
+    )
+    labels = [r["label"] for r in label_rows]
+
+    # 烹飪方式
+    method_rows = await db.fetch_all(
+        recipe_cook_methods.select().where(recipe_cook_methods.c.recipe_id == recipe_id)
+    )
+    cook_methods = [r["cook_methods"] for r in method_rows]
+
     fav_row = await db.fetch_one(
-        favorites.select().where((favorites.c.recipe_id == recipe_id) & (favorites.c.user_id == 1))
+        user_recipes.select().where((user_recipes.c.recipe_id == recipe_id) & (user_recipes.c.user_id == 1))
     )
 
     result = dict(row)
-    result["view_count"] += 1
     result["ingredients"] = ing_list
+    result["labels"] = labels
+    result["cook_methods"] = cook_methods
     result["is_favorited"] = fav_row is not None
-
-    if result.get("steps"):
-        try:
-            result["steps"] = json.loads(result["steps"])
-        except Exception:
-            pass
 
     return result
