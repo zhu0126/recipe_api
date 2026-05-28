@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 
 from src.database import database
@@ -33,17 +33,18 @@ async def recipes_by_ingredients(
 @router.get("/advanced", summary="食譜進階篩選與排序")
 async def advanced_filter(
     keyword: Optional[str] = Query(None),
-    cuisine: Optional[str] = Query(None),
-    difficulty: Optional[str] = Query(None),
-    max_time: Optional[int] = Query(None),
-    tags: Optional[str] = Query(None),
-    sort_by: str = Query("created_at"),
-    order: str = Query("desc"),
+    label: Optional[str] = Query(None, description="標籤，如：湯品與鍋物、肉類料理"),
+    difficulty: Optional[str] = Query(None, description="易 / 中 / 難"),
+    max_time: Optional[int] = Query(None, description="最長烹飪時間（分鐘）"),
+    is_vegetarian: Optional[bool] = Query(None, description="true=素食"),
+    sort_by: str = Query("recipe_id", description="cook_time / servings / title"),
+    order: str = Query("asc"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
     return await recipe_service.advanced_filter(
-        database, keyword, cuisine, difficulty, max_time, tags, sort_by, order, page, page_size
+        database, keyword, label, difficulty, max_time,
+        is_vegetarian, sort_by, order, page, page_size
     )
 
 
@@ -55,7 +56,7 @@ async def list_recipes(
     from src.models import recipes
     offset = (page - 1) * page_size
     rows = await database.fetch_all(
-        recipes.select().order_by(recipes.c.created_at.desc()).offset(offset).limit(page_size)
+        recipes.select().order_by(recipes.c.recipe_id).offset(offset).limit(page_size)
     )
     return {"page": page, "page_size": page_size, "results": [dict(r) for r in rows]}
 
