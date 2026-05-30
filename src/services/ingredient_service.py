@@ -20,13 +20,3 @@ async def search_ingredients(db, q: str, limit: int) -> dict:
     )
     return {"keyword": q, "results": [dict(r) for r in rows]}
 
-# 注釋：以下代碼對應被註釋掉的 POST 端點
-"""
-    existing = await db.fetch_one(ingredients.select().where(ingredients.c.name == name))
-    if existing:
-        return None
-    ing_id = await db.execute(
-        ingredients.insert().values(name=name, category=category, unit=unit or "份")
-    )
-    return {"message": "食材新增成功", "ingredient_id": ing_id, "name": name}
-"""

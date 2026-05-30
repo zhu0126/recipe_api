@@ -23,3 +23,16 @@ async def search_ingredients(
 ):
     return await ingredient_service.search_ingredients(database, q, limit)
 
+@router.post("/", summary="新增食材", status_code=201)
+async def create_ingredient(item: IngredientCreate):
+    existing = await ingredient_service.get_ingredient_by_name(database, item.name)
+
+    if existing:
+        raise HTTPException(status_code=409, detail="食材已存在")
+
+    return await ingredient_service.create_ingredient(
+        database,
+        item.name,
+        item.category,
+        item.unit
+    )
