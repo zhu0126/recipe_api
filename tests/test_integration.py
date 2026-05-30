@@ -2,7 +2,7 @@ def test_full_cooking_flow(client):
     # 1. 新增食材到冰箱
     res = client.post("/api/fridge/", json={
         "ingredient_name": "番茄",
-        "quantity": 3,
+        "amount": 3,
         "unit": "顆"
     })
     assert res.status_code == 201
@@ -19,19 +19,30 @@ def test_full_cooking_flow(client):
 
     # 4. 如果有食譜，收藏第一筆
     if recipes:
-        print(f"\n找到 {len(recipes)} 筆食譜，recipe_id={recipes[0]['recipe_id']}")
+        # print(f"\n找到 {len(recipes)} 筆食譜，recipe_id={recipes[0]['recipe_id']}")
         recipe_id = recipes[0]["recipe_id"]
 
+        # 先查目前收藏清單
+        favlist = client.get("/api/favorites/")
+        fav_ids = [r["recipe_id"] for r in favlist.json()["results"]]
+
+        # 如果已經收藏，先取消收藏
+        if recipe_id in fav_ids:
+            client.post(f"/api/favorites/{recipe_id}")
+
+        # 執行收藏
         fav = client.post(f"/api/favorites/{recipe_id}")
         assert fav.json()["is_favorited"] == True
 
-        # 5. 確認收藏清單有它
+        # 確認收藏清單有它
         favlist = client.get("/api/favorites/")
         fav_ids = [r["recipe_id"] for r in favlist.json()["results"]]
         assert recipe_id in fav_ids
 
-        # 6. 取消收藏，確認清單移除
+        # 取消收藏
         client.post(f"/api/favorites/{recipe_id}")
+        
+        # 確認已移除
         favlist2 = client.get("/api/favorites/")
         fav_ids2 = [r["recipe_id"] for r in favlist2.json()["results"]]
         assert recipe_id not in fav_ids2
@@ -40,9 +51,9 @@ def test_batch_then_search(client):
     # 批次新增
     res = client.post("/api/fridge/batch", json={
         "items": [
-            {"ingredient_name": "雞蛋", "quantity": 6, "unit": "顆"},
-            {"ingredient_name": "牛奶", "quantity": 500, "unit": "毫升"},
-            {"ingredient_name": "麵粉", "quantity": 200, "unit": "克"},
+            {"ingredient_name": "雞蛋", "amount": 6, "unit": "顆"},
+            {"ingredient_name": "牛奶", "amount": 500, "unit": "毫升"},
+            {"ingredient_name": "麵粉", "amount": 200, "unit": "克"},
         ]
     })
     assert res.status_code == 201

@@ -20,8 +20,8 @@ async def get_favorites(db, page: int, page_size: int) -> dict:
         "results": [
             {
                 "recipe_id": r["recipe_id"],
-                "title": r.get("title"),
-                "cook_time": r.get("cook_time"),
+                "title": r["title"],
+                "cook_time": r["cook_time"],
                 "difficulty": r["difficulty"],
                 "image_url": r["image_url"],
                 "is_vegetarian": r["is_vegetarian"],
