@@ -20,3 +20,25 @@ async def search_ingredients(db, q: str, limit: int) -> dict:
     )
     return {"keyword": q, "results": [dict(r) for r in rows]}
 
+async def get_ingredient_by_name(db, name: str):
+    return await db.fetch_one(
+        ingredients.select().where(ingredients.c.name == name)
+    )
+
+async def create_ingredient(db, name: str, category=None, unit: str = "份") -> dict:
+    values = {
+        "name": name,
+        "category": category,
+        "unit": unit,
+    }
+
+    new_id = await db.execute(
+        ingredients.insert().values(**values)
+    )
+
+    return {
+        "ingredient_id": new_id,
+        "name": name,
+        "category": category,
+        "unit": unit,
+    }

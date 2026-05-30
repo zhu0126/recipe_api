@@ -3,7 +3,7 @@ from typing import Optional
 
 from src.database import database
 from src.services import ingredient_service
-# from src.schemas import IngredientCreate
+from src.schemas import IngredientCreate
 
 router = APIRouter()
 
