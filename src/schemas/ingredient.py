@@ -10,7 +10,9 @@ class IngredientBase(BaseModel):
 
 
 class IngredientCreate(IngredientBase):
-    pass
+    name: str
+    category: Optional[str] = None
+    unit: Optional[str] = "份"
 
 
 class IngredientOut(IngredientBase):

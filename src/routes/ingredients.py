@@ -7,7 +7,6 @@ from src.services import ingredient_service
 
 router = APIRouter()
 
-
 @router.get("/", summary="取得所有可用食材")
 async def list_ingredients(
     category: Optional[str] = Query(None, description="篩選分類，如：蔬菜與菇類"),

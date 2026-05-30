@@ -15,4 +15,10 @@ def test_fuzzy_search(client):
 def test_create_duplicate_ingredient(client):
     client.post("/api/ingredients/", json={"name": "洋蔥"})
     res = client.post("/api/ingredients/", json={"name": "洋蔥"})
+    
+    print(res.status_code)
+    print(res.json())
+    
     assert res.status_code == 409  # 重複應該衝突
+
+    
