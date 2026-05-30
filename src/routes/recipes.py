@@ -6,17 +6,24 @@ from src.services import recipe_service
 
 router = APIRouter()
 
+@router.get("/", summary="查看全部食譜")
+async def list_recipes(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+):
+    from src.models import recipes
+    offset = (page - 1) * page_size
+    rows = await database.fetch_all(
+        recipes.select().order_by(recipes.c.recipe_id).offset(offset).limit(page_size)
+    )
+    return {"page": page, "page_size": page_size, "results": [dict(r) for r in rows]}
 
-# 注釋：服務層的 get_home_recipes 函數已被註釋
-"""
+
 @router.get("/home", summary="首頁推薦與熱門食譜")
 async def home_recipes(limit: int = Query(10, ge=1, le=50)):
     return await recipe_service.get_home_recipes(database, limit)
-"""
 
 
-# 注釋：服務層的 search_recipes 函數已被註釋
-"""
 @router.get("/search", summary="食譜名稱關鍵字搜尋")
 async def search_recipes(
     q: str = Query(..., min_length=1),
@@ -24,20 +31,7 @@ async def search_recipes(
     page_size: int = Query(20, ge=1, le=100),
 ):
     return await recipe_service.search_recipes(database, q, page, page_size)
-"""
 
-
-@router.get("/by-ingredients", summary="輸入食材查詢食譜")
-async def recipes_by_ingredients(
-    ingredient_names: str = Query(..., description="逗號分隔，如：雞蛋,番茄"),
-    match_all: bool = Query(False),
-):
-    names = [n.strip() for n in ingredient_names.split(",") if n.strip()]
-    return await recipe_service.get_recipes_by_ingredients(database, names, match_all)
-
-
-# 注釋：服務層的 advanced_filter 函數已被註釋，路由參數也不匹配
-"""
 @router.get("/advanced", summary="食譜進階篩選與排序")
 async def advanced_filter(
     keyword: Optional[str] = Query(None),
@@ -54,21 +48,14 @@ async def advanced_filter(
         database, keyword, label, difficulty, max_time,
         is_vegetarian, sort_by, order, page, page_size
     )
-"""
 
-
-@router.get("/", summary="查看全部食譜")
-async def list_recipes(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+@router.get("/by-ingredients", summary="輸入食材查詢食譜")
+async def recipes_by_ingredients(
+    ingredient_names: str = Query(..., description="逗號分隔，如：雞蛋,番茄"),
+    match_all: bool = Query(False),
 ):
-    from src.models import recipes
-    offset = (page - 1) * page_size
-    rows = await database.fetch_all(
-        recipes.select().order_by(recipes.c.recipe_id).offset(offset).limit(page_size)
-    )
-    return {"page": page, "page_size": page_size, "results": [dict(r) for r in rows]}
-
+    names = [n.strip() for n in ingredient_names.split(",") if n.strip()]
+    return await recipe_service.get_recipes_by_ingredients(database, names, match_all)
 
 @router.get("/{recipe_id}", summary="取得單一食譜詳細資訊")
 async def get_recipe(recipe_id: int):
