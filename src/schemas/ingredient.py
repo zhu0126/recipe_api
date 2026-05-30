@@ -14,8 +14,7 @@ class IngredientCreate(IngredientBase):
 
 
 class IngredientOut(IngredientBase):
-    id: int
-    created_at: datetime
+    ingredient_id: str
 
     class Config:
         from_attributes = True

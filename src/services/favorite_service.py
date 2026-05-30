@@ -3,14 +3,13 @@ from src.models import user_recipes, recipes
 
 USER_ID = "001"
 
-
 async def get_favorites(db, page: int, page_size: int) -> dict:
     offset = (page - 1) * page_size
     query = (
-        user_recipes.join(recipes, user_recipes.c.recipe_id == recipes.c.id)
+        user_recipes.join(recipes, user_recipes.c.recipe_id == recipes.c.recipe_id)
         .select()
         .where(user_recipes.c.user_id == USER_ID)
-        .order_by(user_recipes.c.created_at.desc())
+        .order_by(user_recipes.c.saved_at.desc())
         .offset(offset)
         .limit(page_size)
     )
@@ -21,8 +20,8 @@ async def get_favorites(db, page: int, page_size: int) -> dict:
         "results": [
             {
                 "recipe_id": r["recipe_id"],
-                "title": r["title"],
-                "cook_time": r["cook_time"],
+                "title": r.get("title"),
+                "cook_time": r.get("cook_time"),
                 "difficulty": r["difficulty"],
                 "image_url": r["image_url"],
                 "is_vegetarian": r["is_vegetarian"],
@@ -33,8 +32,9 @@ async def get_favorites(db, page: int, page_size: int) -> dict:
     }
 
 
+
 async def toggle_favorite(db, recipe_id: int) -> dict:
-    recipe = await db.fetch_one(recipes.select().where(recipes.c.id == recipe_id))
+    recipe = await db.fetch_one(recipes.select().where(recipes.c.recipe_id == recipe_id))
     if not recipe:
         return None
 

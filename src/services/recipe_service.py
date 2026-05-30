@@ -7,6 +7,8 @@ from src.models import recipes, recipe_ingredients, ingredients, user_recipes, r
 
 USER_ID = "001" 
 
+# 注釋：view_count 和 like_count 列不存在於 tables.py 中
+"""
 async def get_home_recipes(db, limit: int) -> dict:
     popular = await db.fetch_all(
         recipes.select().order_by(recipes.c.view_count.desc()).limit(limit)
@@ -18,8 +20,11 @@ async def get_home_recipes(db, limit: int) -> dict:
         "popular": [dict(r) for r in popular],
         "recommended": [dict(r) for r in recommended],
     }
+"""
 
 
+# 注釋：name 列和 view_count 列不存在於 tables.py 中
+"""
 async def search_recipes(db, q: str, page: int, page_size: int) -> dict:
     offset = (page - 1) * page_size
     rows = await db.fetch_all(
@@ -33,6 +38,7 @@ async def search_recipes(db, q: str, page: int, page_size: int) -> dict:
         sa.select(sa.func.count()).select_from(recipes).where(recipes.c.name.ilike(f"%{q}%"))
     )
     return {"total": total, "page": page, "page_size": page_size, "results": [dict(r) for r in rows]}
+"""
 
 
 async def get_recipes_by_ingredients(db, names: list, match_all: bool) -> dict:
@@ -66,6 +72,8 @@ async def get_recipes_by_ingredients(db, names: list, match_all: bool) -> dict:
     return {"total": len(results), "recipes": results}
 
 
+# 注釋：name, cuisine, cooking_time, tags 列不存在於 tables.py 中，參數簽名與路由不匹配
+"""
 async def advanced_filter(db, keyword, cuisine, difficulty, max_time, tags, sort_by, order, page, page_size) -> dict:
     offset = (page - 1) * page_size
     stmt = recipes.select()
@@ -89,6 +97,7 @@ async def advanced_filter(db, keyword, cuisine, difficulty, max_time, tags, sort
 
     rows = await db.fetch_all(stmt)
     return {"page": page, "page_size": page_size, "results": [dict(r) for r in rows]}
+"""
 
 
 async def get_recipe_detail(db, recipe_id: int) -> dict:
@@ -101,7 +110,7 @@ async def get_recipe_detail(db, recipe_id: int) -> dict:
     # )
 
     ing_query = (
-        recipe_ingredients.join(ingredients, recipe_ingredients.c.ingredient_id == ingredients.c.id)
+        recipe_ingredients.join(ingredients, recipe_ingredients.c.ingredient_id == ingredients.c.ingredient_id)
         .select()
         .where(recipe_ingredients.c.recipe_id == recipe_id)
     )
@@ -129,7 +138,7 @@ async def get_recipe_detail(db, recipe_id: int) -> dict:
     cook_methods = [r["cook_methods"] for r in method_rows]
 
     fav_row = await db.fetch_one(
-        user_recipes.select().where((user_recipes.c.recipe_id == recipe_id) & (user_recipes.c.user_id == 1))
+        user_recipes.select().where((user_recipes.c.recipe_id == recipe_id) & (user_recipes.c.user_id == USER_ID))
     )
 
     result = dict(row)

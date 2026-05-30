@@ -21,10 +21,10 @@ async def _get_ingredient_id(db, name: str) -> Optional[str]:
 
 async def get_fridge(db) -> list:
     query = (
-        user_ingredients.join(ingredients, user_ingredients.c.ingredient_id == ingredients.c.id)
+        user_ingredients.join(ingredients, user_ingredients.c.ingredient_id == ingredients.c.ingredient_id)
         .select()
         .where(user_ingredients.c.user_id == USER_ID)
-        .order_by(user_ingredients.c.added_at.desc())
+        .order_by(user_ingredients.c.purchase_date.desc())
     )
     rows = await db.fetch_all(query)
     return [

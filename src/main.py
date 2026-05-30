@@ -14,6 +14,11 @@ from src.routes import recipes, fridge, favorites, ingredients
 async def lifespan(app: FastAPI):
     metadata.create_all(engine)
     await database.connect()
+    # ensure a default test user exists to satisfy FK constraints in tests
+    from src.models import users
+    existing = await database.fetch_one(users.select().where(users.c.user_id == "001"))
+    if not existing:
+        await database.execute(users.insert().values(user_id="001", username="tester"))
     yield
     await database.disconnect()
 

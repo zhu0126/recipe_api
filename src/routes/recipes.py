@@ -7,11 +7,16 @@ from src.services import recipe_service
 router = APIRouter()
 
 
+# 注釋：服務層的 get_home_recipes 函數已被註釋
+"""
 @router.get("/home", summary="首頁推薦與熱門食譜")
 async def home_recipes(limit: int = Query(10, ge=1, le=50)):
     return await recipe_service.get_home_recipes(database, limit)
+"""
 
 
+# 注釋：服務層的 search_recipes 函數已被註釋
+"""
 @router.get("/search", summary="食譜名稱關鍵字搜尋")
 async def search_recipes(
     q: str = Query(..., min_length=1),
@@ -19,6 +24,7 @@ async def search_recipes(
     page_size: int = Query(20, ge=1, le=100),
 ):
     return await recipe_service.search_recipes(database, q, page, page_size)
+"""
 
 
 @router.get("/by-ingredients", summary="輸入食材查詢食譜")
@@ -30,6 +36,8 @@ async def recipes_by_ingredients(
     return await recipe_service.get_recipes_by_ingredients(database, names, match_all)
 
 
+# 注釋：服務層的 advanced_filter 函數已被註釋，路由參數也不匹配
+"""
 @router.get("/advanced", summary="食譜進階篩選與排序")
 async def advanced_filter(
     keyword: Optional[str] = Query(None),
@@ -46,6 +54,7 @@ async def advanced_filter(
         database, keyword, label, difficulty, max_time,
         is_vegetarian, sort_by, order, page, page_size
     )
+"""
 
 
 @router.get("/", summary="查看全部食譜")

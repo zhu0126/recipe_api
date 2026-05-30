@@ -7,6 +7,7 @@ from src.models.tables import (
     recipe_cook_methods,
     user_ingredients,
     user_recipes,
+    users,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "recipe_cook_methods",
     "user_ingredients",
     "user_recipes",
+    "users",
 ]
