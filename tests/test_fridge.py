@@ -14,7 +14,7 @@ def test_add_ingredient(client):
 
 def test_add_then_remove(client):
     # 先新增
-    add = client.post("/api/fridge/", json={"ingredient_name": "雞蛋", "quantity": 6})
+    add = client.post("/api/fridge/", json={"ingredient_name": "雞蛋", "amount": 6})
     item_id = add.json().get("id")
 
     # 再移除
