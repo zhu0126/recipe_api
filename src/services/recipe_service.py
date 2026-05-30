@@ -7,39 +7,49 @@ from src.models import recipes, recipe_ingredients, ingredients, user_recipes, r
 
 USER_ID = "001" 
 
-# 注釋：view_count 和 like_count 列不存在於 tables.py 中
-"""
 async def get_home_recipes(db, limit: int) -> dict:
     popular = await db.fetch_all(
-        recipes.select().order_by(recipes.c.view_count.desc()).limit(limit)
+        recipes.select()
+        .order_by(recipes.c.recipe_id.desc())
+        .limit(limit)
     )
+
     recommended = await db.fetch_all(
-        recipes.select().order_by(recipes.c.like_count.desc()).limit(limit)
+        recipes.select()
+        .order_by(recipes.c.recipe_id.asc())
+        .limit(limit)
     )
+
     return {
         "popular": [dict(r) for r in popular],
         "recommended": [dict(r) for r in recommended],
     }
-"""
 
-
-# 注釋：name 列和 view_count 列不存在於 tables.py 中
-"""
 async def search_recipes(db, q: str, page: int, page_size: int) -> dict:
     offset = (page - 1) * page_size
+
+    condition = recipes.c.title.ilike(f"%{q}%")
+
     rows = await db.fetch_all(
         recipes.select()
-        .where(recipes.c.name.ilike(f"%{q}%"))
-        .order_by(recipes.c.view_count.desc())
+        .where(condition)
+        .order_by(recipes.c.recipe_id)
         .offset(offset)
         .limit(page_size)
     )
-    total = await db.fetch_val(
-        sa.select(sa.func.count()).select_from(recipes).where(recipes.c.name.ilike(f"%{q}%"))
-    )
-    return {"total": total, "page": page, "page_size": page_size, "results": [dict(r) for r in rows]}
-"""
 
+    total = await db.fetch_val(
+        sa.select(sa.func.count())
+        .select_from(recipes)
+        .where(condition)
+    )
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "results": [dict(r) for r in rows],
+    }
 
 async def get_recipes_by_ingredients(db, names: list, match_all: bool) -> dict:
     ing_rows = await db.fetch_all(
@@ -71,50 +81,74 @@ async def get_recipes_by_ingredients(db, names: list, match_all: bool) -> dict:
     )
     return {"total": len(results), "recipes": results}
 
-
-# 注釋：name, cuisine, cooking_time, tags 列不存在於 tables.py 中，參數簽名與路由不匹配
-"""
-async def advanced_filter(db, keyword, cuisine, difficulty, max_time, tags, sort_by, order, page, page_size) -> dict:
+async def advanced_filter(
+    db,
+    keyword,
+    label,
+    difficulty,
+    max_time,
+    is_vegetarian,
+    sort_by,
+    order,
+    page,
+    page_size
+) -> dict:
     offset = (page - 1) * page_size
     stmt = recipes.select()
 
     if keyword:
-        stmt = stmt.where(recipes.c.name.ilike(f"%{keyword}%"))
-    if cuisine:
-        stmt = stmt.where(recipes.c.cuisine == cuisine)
+        stmt = stmt.where(recipes.c.title.ilike(f"%{keyword}%"))
+
     if difficulty:
         stmt = stmt.where(recipes.c.difficulty == difficulty)
+
     if max_time:
-        stmt = stmt.where(recipes.c.cooking_time <= max_time)
-    if tags:
-        for tag in tags.split(","):
-            stmt = stmt.where(recipes.c.tags.ilike(f"%{tag.strip()}%"))
+        stmt = stmt.where(recipes.c.cook_time <= max_time)
 
-    allowed_sort = {"cook_time", "servings", "title"}
-    sort_col = getattr(recipes.c, sort_by) if sort_by in allowed_sort else recipes.c.recipe_id
-    stmt = stmt.order_by(sort_col.asc() if order == "asc" else sort_col.desc())
-    stmt = stmt.offset(offset).limit(page_size)
+    if is_vegetarian is not None:
+        stmt = stmt.where(recipes.c.is_vegetarian == is_vegetarian)
 
-    rows = await db.fetch_all(stmt)
-    return {"page": page, "page_size": page_size, "results": [dict(r) for r in rows]}
-"""
+    allowed_sort = {
+        "recipe_id": recipes.c.recipe_id,
+        "cook_time": recipes.c.cook_time,
+        "servings": recipes.c.servings,
+        "title": recipes.c.title,
+    }
 
+    sort_col = allowed_sort.get(sort_by, recipes.c.recipe_id)
 
-async def get_recipe_detail(db, recipe_id: int) -> dict:
-    row = await db.fetch_one(recipes.select().where(recipes.c.recipe_id == recipe_id))
+    if order == "desc":
+        stmt = stmt.order_by(sort_col.desc())
+    else:
+        stmt = stmt.order_by(sort_col.asc())
+
+    rows = await db.fetch_all(
+        stmt.offset(offset).limit(page_size)
+    )
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "results": [dict(r) for r in rows],
+    }
+
+async def get_recipe_detail(db, recipe_id: int) -> dict | None:
+    row = await db.fetch_one(
+        recipes.select().where(recipes.c.recipe_id == recipe_id)
+    )
+
     if not row:
         return None
 
-    # await db.execute(
-    #     recipes.update().where(recipes.c.id == recipe_id).values(view_count=row["view_count"] + 1)
-    # )
-
     ing_query = (
-        recipe_ingredients.join(ingredients, recipe_ingredients.c.ingredient_id == ingredients.c.ingredient_id)
+        recipe_ingredients
+        .join(ingredients, recipe_ingredients.c.ingredient_id == ingredients.c.ingredient_id)
         .select()
         .where(recipe_ingredients.c.recipe_id == recipe_id)
     )
+
     ing_rows = await db.fetch_all(ing_query)
+
     ing_list = [
         {
             "ingredient_id": r["ingredient_id"],
@@ -125,20 +159,21 @@ async def get_recipe_detail(db, recipe_id: int) -> dict:
         for r in ing_rows
     ]
 
-    # 標籤
     label_rows = await db.fetch_all(
         recipe_label.select().where(recipe_label.c.recipe_id == recipe_id)
     )
     labels = [r["label"] for r in label_rows]
 
-    # 烹飪方式
     method_rows = await db.fetch_all(
         recipe_cook_methods.select().where(recipe_cook_methods.c.recipe_id == recipe_id)
     )
     cook_methods = [r["cook_methods"] for r in method_rows]
 
     fav_row = await db.fetch_one(
-        user_recipes.select().where((user_recipes.c.recipe_id == recipe_id) & (user_recipes.c.user_id == USER_ID))
+        user_recipes.select().where(
+            (user_recipes.c.recipe_id == recipe_id) &
+            (user_recipes.c.user_id == USER_ID)
+        )
     )
 
     result = dict(row)
