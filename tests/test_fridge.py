@@ -12,13 +12,24 @@ def test_add_ingredient(client):
     assert res.status_code == 201
     assert res.json()["action"] in ("created", "updated")
 
+
 def test_add_then_remove(client):
     # 先新增
     add = client.post("/api/fridge/", json={"ingredient_name": "雞蛋", "amount": 6})
-    item_id = add.json().get("id")
 
-    # 再移除
-    res = client.delete(f"/api/fridge/{item_id}")
+    assert add.status_code == 201
+    fridge = client.get("/api/fridge/")
+    assert fridge.status_code == 200
+
+    items = fridge.json()
+
+    egg = next(
+        item for item in items
+        if item["ingredient_name"] == "雞蛋"
+    )
+
+    ingredient_id = egg["ingredient_id"]
+    res = client.delete(f"/api/fridge/{ingredient_id}")
     assert res.status_code == 200
 
 def test_remove_nonexistent(client):
